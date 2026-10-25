@@ -1,7 +1,7 @@
 {
   "name": "dsh-sidebar-density",
   "version": "0.1.0",
-  "description": "Sidebar density control centre for DSH: five fold switches, three density presets, three width presets — one foot entry plus a settings section. 侧栏密度控制中心：五个折叠开关 + 三档密度预设 + 三档宽度预设，入口收纳在侧栏底部与设置页。",
+  "description": "Lightweight sidebar UI for DSH: five fold switches, three density presets and three width presets in one footer row plus a settings section. 轻量级侧栏 UI：五个折叠开关 + 三档密度/宽度预设，入口收在底部一行与设置分区。",
   "type": "module",
   "license": "MIT",
   "author": "LUgABeEEE",

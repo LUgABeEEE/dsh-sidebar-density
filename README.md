@@ -1,8 +1,20 @@
 # dsh-sidebar-density
 
-A sidebar density control centre for [DSH (DeepSeek Harness)](https://github.com/LUgABeEEE/dsh-main-workspace): five fold switches, three density presets and three width presets — served from one compact foot entry plus a settings section.
+**A lightweight sidebar UI for [DSH (DeepSeek Harness)](https://github.com/LUgABeEEE/dsh-main-workspace).** Five fold switches, three density presets and three width presets — one footer row plus a settings section, with no dependencies and no background service. **v0.1.0**
 
-把 DSH 左侧栏被"外壳"吃掉的高度还给「工作区」（会话列表），并提供整套侧栏密度控制。**v0.1.0**
+**轻量级侧栏 UI**：把 DSH 左侧栏被"外壳"吃掉的高度还给「工作区」，顺手给整套密度/宽度控制。没有依赖、没有常驻服务、没有构建步骤——一个 `lib/client.js` 加一张注入的样式表；装上是几行 CSS，卸载即完全还原。
+
+## 为什么叫轻量
+
+| 轻量在哪 | 事实 |
+| --- | --- |
+| **零依赖** | `package.json` 没有 `dependencies`；运行时只用宿主已经提供的 `react` |
+| **一个文件** | 全部视觉与控制都在 `lib/client.js`，无构建、无打包、无生成产物 |
+| **无后台** | host 半是空实现：没有服务、没有路由、没有工具、没有配置 schema |
+| **平时不动 DOM** | 只往 `<html>` 写几个 `data-dsd-*` 属性，宿主 React 树一概不碰 |
+| **卸载即还原** | 删掉注入的 `<style>` 就是出厂样子；localStorage 记录可随时清 |
+
+装一个功能齐全的侧栏面板通常意味着几百 KB 的运行时；这里全部加起来是一个文件，加载开销就是一张样式表。
 
 ## 问题
 
