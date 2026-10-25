@@ -88,6 +88,7 @@ function createDom() {
     createElement,
     getElementById: (id) => head.children.find((child) => child.id === id) ?? null,
     querySelector: () => null,
+    querySelectorAll: () => [],
     addEventListener: (type, fn) => {
       if (!listeners.has(type)) listeners.set(type, [])
       listeners.get(type).push(fn)
@@ -227,6 +228,30 @@ function createCtx() {
           return () => {}
         },
       },
+    },
+  }
+}
+
+/**
+ * Minimal footer-button stand-in for the fold/mark logic: attributes, text,
+ * a closest() that recognises our own bar, and a click counter.
+ */
+function fakeButton(text, { own = false, ariaLabel = null } = {}) {
+  const attrs = { 'aria-label': ariaLabel === null ? text : ariaLabel }
+  return {
+    attrs,
+    textContent: text,
+    clicked: 0,
+    getAttribute: (name) => (name in attrs ? attrs[name] : null),
+    setAttribute: (name, value) => {
+      attrs[name] = String(value)
+    },
+    removeAttribute: (name) => {
+      delete attrs[name]
+    },
+    closest: (selector) => (own && selector === '[data-dsd-bar]' ? { own: true } : null),
+    click() {
+      this.clicked += 1
     },
   }
 }
@@ -523,19 +548,41 @@ test('disposing the effect removes the sheet and every attribute', () => {
   assert.equal(dom.store.get(STORE_KEY) !== undefined, true, 'the saved choice survives a dispose')
 })
 
-test('the sheet hides the import and mobile footer entries', () => {
+test('the sheet hides folded entries and the mobile trigger', () => {
   const { dom, plugin } = loadBundle()
   const { ctx } = createCtx()
   plugin.apply(ctx)
   const style = dom.head.children.find((child) => child.id === 'dsh-sidebar-density-css')
-  assert.ok(style.textContent.includes('button[aria-label="导入会话"]'))
-  assert.ok(style.textContent.includes('button[aria-label="Import Sessions"]'))
+  assert.ok(style.textContent.includes('[data-dsd-folded]'))
   assert.ok(style.textContent.includes('[class*="dsh-mobile-control__trigger"]'))
+})
+
+test('install marks the chat-import button as folded and leaves our own alone', () => {
+  const { dom, plugin } = loadBundle()
+  const importButton = fakeButton('导入会话')
+  const ownButton = fakeButton('导入', { own: true })
+  dom.document.querySelectorAll = () => [importButton, ownButton]
+  const { ctx } = createCtx()
+  plugin.apply(ctx)
+
+  assert.equal(importButton.attrs['data-dsd-folded'], '', 'the original trigger gets marked')
+  assert.equal(ownButton.attrs['data-dsd-folded'], undefined, 'our own bar entry stays visible')
+})
+
+test('an English-labelled import button is folded too', () => {
+  const { dom, plugin } = loadBundle()
+  const importButton = fakeButton('Import Sessions')
+  dom.document.querySelectorAll = () => [importButton]
+  const { ctx } = createCtx()
+  plugin.apply(ctx)
+  assert.equal(importButton.attrs['data-dsd-folded'], '')
 })
 
 test('the foot bar offers density, import and mobile in one row', () => {
   const { dom, react, plugin } = loadBundle()
-  dom.document.querySelector = () => ({ click() {} })
+  dom.document.querySelector = (selector) =>
+    selector.includes('dsh-mobile-control') ? { click() {} } : null
+  dom.document.querySelectorAll = () => [fakeButton('导入会话')]
   const { ctx, registrations } = createCtx()
   plugin.apply(ctx)
   const { tree } = mount(registrations[0], react)
@@ -560,52 +607,62 @@ test('an absent plugin leaves no quick entry behind', () => {
 test('the import quick entry prefers the native right-bar service', () => {
   const { dom, react, plugin } = loadBundle()
   const calls = []
-  dom.document.querySelector = (selector) => ({ click: () => calls.push(selector) })
+  const importButton = fakeButton('导入会话')
+  dom.document.querySelectorAll = () => [importButton]
   const { ctx, registrations } = createCtx()
   ctx.get = (name) =>
-    name === 'sidebarRight' ? { openTab: (id) => calls.push(`openTab:${id}`) } : undefined
+    name === 'sidebarRight'
+      ? { openTab: (id) => calls.push(`openTab:${id}`) }
+      : undefined
   plugin.apply(ctx)
 
   const { tree } = mount(registrations[0], react)
   findButton(tree, '导入会话').props.onClick()
   assert.deepEqual(calls, ['openTab:chat-import'], 'the service wins over the DOM click')
+  assert.equal(importButton.clicked, 0, 'the original button must not be clicked')
 })
 
-test('the import quick entry falls back to clicking the original footer button', () => {
+test('the import quick entry falls back to clicking the original button', () => {
   const { dom, react, plugin } = loadBundle()
-  const calls = []
-  dom.document.querySelector = (selector) => ({ click: () => calls.push(selector) })
+  const importButton = fakeButton('导入会话')
+  dom.document.querySelectorAll = () => [importButton]
   const { ctx, registrations } = createCtx()
   plugin.apply(ctx)
 
   const { tree } = mount(registrations[0], react)
   findButton(tree, '导入会话').props.onClick()
-  assert.equal(calls.length, 1)
-  assert.ok(
-    calls[0].includes('导入会话'),
-    `expected the import trigger selector, got ${calls[0]}`,
-  )
+  assert.equal(importButton.clicked, 1, 'the original trigger receives one click')
 })
 
 test('the mobile quick entry clicks the mobile trigger', () => {
   const { dom, react, plugin } = loadBundle()
-  const calls = []
-  dom.document.querySelector = (selector) => ({ click: () => calls.push(selector) })
+  const mobile = { clickCalls: 0, click() { this.clickCalls += 1 } }
+  dom.document.querySelector = () => mobile
   const { ctx, registrations } = createCtx()
   plugin.apply(ctx)
 
   const { tree } = mount(registrations[0], react)
   findButton(tree, '移动访问').props.onClick()
-  assert.equal(calls.length, 1)
-  assert.ok(calls[0].includes('dsh-mobile-control__trigger'))
+  assert.equal(mobile.clickCalls, 1)
 })
 
 test('the settings section also carries the folded-entry tools', () => {
   const { dom, react, plugin } = loadBundle()
-  dom.document.querySelector = () => ({ click() {} })
+  dom.document.querySelectorAll = () => [fakeButton('导入会话')]
   const { ctx, registrations } = createCtx()
   plugin.apply(ctx)
   const { tree } = mount(registrations[1], react)
   assert.ok(findButton(tree, '导入会话'), 'the settings page keeps the import tool')
-  assert.ok(findButton(tree, '移动访问'), 'the settings page keeps the mobile tool')
+})
+
+test('disposing removes the folded marker', () => {
+  const { dom, plugin } = loadBundle()
+  const importButton = fakeButton('导入会话')
+  dom.document.querySelectorAll = () => [importButton]
+  const { ctx, effects } = createCtx()
+  plugin.apply(ctx)
+  assert.equal(importButton.attrs['data-dsd-folded'], '')
+
+  for (const effect of effects) effect.dispose()
+  assert.equal(importButton.attrs['data-dsd-folded'], undefined)
 })
