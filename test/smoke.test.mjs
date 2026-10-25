@@ -533,26 +533,31 @@ test('the sheet hides the import and mobile footer entries', () => {
   assert.ok(style.textContent.includes('[class*="dsh-mobile-control__trigger"]'))
 })
 
-test('the popover offers the folded entries when both plugins are on the page', () => {
+test('the foot bar offers density, import and mobile in one row', () => {
   const { dom, react, plugin } = loadBundle()
   dom.document.querySelector = () => ({ click() {} })
   const { ctx, registrations } = createCtx()
   plugin.apply(ctx)
-  const tree = openPopover(registrations[0], react)
-  assert.ok(findButton(tree, '导入会话'), 'import launcher must render')
-  assert.ok(findButton(tree, '移动访问'), 'mobile launcher must render')
+  const { tree } = mount(registrations[0], react)
+  assert.ok(findButton(tree, '侧栏密度'), 'the density entry must render')
+  assert.ok(findButton(tree, '导入会话'), 'the import quick entry must render')
+  assert.ok(findButton(tree, '移动访问'), 'the mobile quick entry must render')
+  const bar = walk(tree).find((node) => node.props !== undefined && 'data-dsd-bar' in node.props)
+  assert.ok(bar, 'the three entries must share one bar')
+  assert.equal(bar.type, 'div')
 })
 
-test('no launcher renders when the plugins and the right-bar service are absent', () => {
+test('an absent plugin leaves no quick entry behind', () => {
   const { react, plugin } = loadBundle()
   const { ctx, registrations } = createCtx()
   plugin.apply(ctx)
-  const tree = openPopover(registrations[0], react)
+  const { tree } = mount(registrations[0], react)
+  assert.ok(findButton(tree, '侧栏密度'), 'the density entry always renders')
   assert.equal(findButton(tree, '导入会话'), undefined)
   assert.equal(findButton(tree, '移动访问'), undefined)
 })
 
-test('the import launcher prefers the native right-bar service', () => {
+test('the import quick entry prefers the native right-bar service', () => {
   const { dom, react, plugin } = loadBundle()
   const calls = []
   dom.document.querySelector = (selector) => ({ click: () => calls.push(selector) })
@@ -561,19 +566,19 @@ test('the import launcher prefers the native right-bar service', () => {
     name === 'sidebarRight' ? { openTab: (id) => calls.push(`openTab:${id}`) } : undefined
   plugin.apply(ctx)
 
-  const tree = openPopover(registrations[0], react)
+  const { tree } = mount(registrations[0], react)
   findButton(tree, '导入会话').props.onClick()
   assert.deepEqual(calls, ['openTab:chat-import'], 'the service wins over the DOM click')
 })
 
-test('the import launcher falls back to clicking the original footer button', () => {
+test('the import quick entry falls back to clicking the original footer button', () => {
   const { dom, react, plugin } = loadBundle()
   const calls = []
   dom.document.querySelector = (selector) => ({ click: () => calls.push(selector) })
   const { ctx, registrations } = createCtx()
   plugin.apply(ctx)
 
-  const tree = openPopover(registrations[0], react)
+  const { tree } = mount(registrations[0], react)
   findButton(tree, '导入会话').props.onClick()
   assert.equal(calls.length, 1)
   assert.ok(
@@ -582,20 +587,25 @@ test('the import launcher falls back to clicking the original footer button', ()
   )
 })
 
-test('the mobile launcher clicks the mobile trigger and closes the popover', () => {
+test('the mobile quick entry clicks the mobile trigger', () => {
   const { dom, react, plugin } = loadBundle()
   const calls = []
   dom.document.querySelector = (selector) => ({ click: () => calls.push(selector) })
   const { ctx, registrations } = createCtx()
   plugin.apply(ctx)
 
-  const tree = openPopover(registrations[0], react)
+  const { tree } = mount(registrations[0], react)
   findButton(tree, '移动访问').props.onClick()
   assert.equal(calls.length, 1)
   assert.ok(calls[0].includes('dsh-mobile-control__trigger'))
-  assert.equal(
-    findButton(react.tree, '移动访问'),
-    undefined,
-    'the popover must close after a launch',
-  )
+})
+
+test('the settings section also carries the folded-entry tools', () => {
+  const { dom, react, plugin } = loadBundle()
+  dom.document.querySelector = () => ({ click() {} })
+  const { ctx, registrations } = createCtx()
+  plugin.apply(ctx)
+  const { tree } = mount(registrations[1], react)
+  assert.ok(findButton(tree, '导入会话'), 'the settings page keeps the import tool')
+  assert.ok(findButton(tree, '移动访问'), 'the settings page keeps the mobile tool')
 })
