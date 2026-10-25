@@ -1,0 +1,14 @@
+# dsh-sidebar-density — bundle patch
+#
+# One Loader row. The whole behaviour lives in the client half (`./client.js`);
+# this row exists so the host composes the package and `dsh-client-modules` can
+# find the `dsh.client` declaration in package.json.
+#
+# The profile's own `cordis.patch.yml` can target the row id (`sidebar-density`)
+# to disable it — that is the dry-run/rollback switch that needs no uninstall:
+#
+#   - id: sidebar-density
+#     disabled: true
+- insert:
+    - id: sidebar-density
+      name: 'dsh-sidebar-density'

@@ -1,0 +1,12 @@
+# dependencies (the plugin itself has none; the host supplies react)
+node_modules/
+
+# local backups left by maintenance edits
+*.bak-*
+*.bak.*
+
+# editor / OS noise
+.DS_Store
+.idea/
+.vscode/
+*.log

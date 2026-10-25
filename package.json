@@ -1,0 +1,51 @@
+{
+  "name": "dsh-sidebar-density",
+  "version": "0.1.0",
+  "description": "Sidebar density control centre for DSH: five fold switches, three density presets, three width presets — one foot entry plus a settings section. 侧栏密度控制中心：五个折叠开关 + 三档密度预设 + 三档宽度预设，入口收纳在侧栏底部与设置页。",
+  "type": "module",
+  "license": "MIT",
+  "author": "LUgABeEEE",
+  "keywords": [
+    "deepseek",
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "cordis",
+    "sidebar",
+    "density",
+    "compact",
+    "preset",
+    "侧栏",
+    "紧凑",
+    "密度"
+  ],
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "scripts": {
+    "check": "node --check lib/index.js && node --check lib/client.js",
+    "test": "node --test test/*.test.mjs",
+    "verify": "npm run check && npm test"
+  },
+  "engines": {
+    "node": ">=22.19.0",
+    "dsh": ">=0.2.0-rc.1 <0.3.0"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true
+    }
+  }
+}
