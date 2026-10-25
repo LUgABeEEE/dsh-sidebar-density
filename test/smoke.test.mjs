@@ -87,6 +87,7 @@ function createDom() {
     head,
     createElement,
     getElementById: (id) => head.children.find((child) => child.id === id) ?? null,
+    querySelector: () => null,
     addEventListener: (type, fn) => {
       if (!listeners.has(type)) listeners.set(type, [])
       listeners.get(type).push(fn)
@@ -209,6 +210,9 @@ function createCtx() {
     registrations,
     injections,
     ctx: {
+      get() {
+        return undefined
+      },
       effect(fn, label) {
         effects.push({ label, dispose: fn() })
         return () => {}
@@ -517,4 +521,81 @@ test('disposing the effect removes the sheet and every attribute', () => {
     assert.equal(dom.html.getAttribute(attr), null, `${attr} must be cleared`)
   }
   assert.equal(dom.store.get(STORE_KEY) !== undefined, true, 'the saved choice survives a dispose')
+})
+
+test('the sheet hides the import and mobile footer entries', () => {
+  const { dom, plugin } = loadBundle()
+  const { ctx } = createCtx()
+  plugin.apply(ctx)
+  const style = dom.head.children.find((child) => child.id === 'dsh-sidebar-density-css')
+  assert.ok(style.textContent.includes('button[aria-label="导入会话"]'))
+  assert.ok(style.textContent.includes('button[aria-label="Import Sessions"]'))
+  assert.ok(style.textContent.includes('[class*="dsh-mobile-control__trigger"]'))
+})
+
+test('the popover offers the folded entries when both plugins are on the page', () => {
+  const { dom, react, plugin } = loadBundle()
+  dom.document.querySelector = () => ({ click() {} })
+  const { ctx, registrations } = createCtx()
+  plugin.apply(ctx)
+  const tree = openPopover(registrations[0], react)
+  assert.ok(findButton(tree, '导入会话'), 'import launcher must render')
+  assert.ok(findButton(tree, '移动访问'), 'mobile launcher must render')
+})
+
+test('no launcher renders when the plugins and the right-bar service are absent', () => {
+  const { react, plugin } = loadBundle()
+  const { ctx, registrations } = createCtx()
+  plugin.apply(ctx)
+  const tree = openPopover(registrations[0], react)
+  assert.equal(findButton(tree, '导入会话'), undefined)
+  assert.equal(findButton(tree, '移动访问'), undefined)
+})
+
+test('the import launcher prefers the native right-bar service', () => {
+  const { dom, react, plugin } = loadBundle()
+  const calls = []
+  dom.document.querySelector = (selector) => ({ click: () => calls.push(selector) })
+  const { ctx, registrations } = createCtx()
+  ctx.get = (name) =>
+    name === 'sidebarRight' ? { openTab: (id) => calls.push(`openTab:${id}`) } : undefined
+  plugin.apply(ctx)
+
+  const tree = openPopover(registrations[0], react)
+  findButton(tree, '导入会话').props.onClick()
+  assert.deepEqual(calls, ['openTab:chat-import'], 'the service wins over the DOM click')
+})
+
+test('the import launcher falls back to clicking the original footer button', () => {
+  const { dom, react, plugin } = loadBundle()
+  const calls = []
+  dom.document.querySelector = (selector) => ({ click: () => calls.push(selector) })
+  const { ctx, registrations } = createCtx()
+  plugin.apply(ctx)
+
+  const tree = openPopover(registrations[0], react)
+  findButton(tree, '导入会话').props.onClick()
+  assert.equal(calls.length, 1)
+  assert.ok(
+    calls[0].includes('导入会话'),
+    `expected the import trigger selector, got ${calls[0]}`,
+  )
+})
+
+test('the mobile launcher clicks the mobile trigger and closes the popover', () => {
+  const { dom, react, plugin } = loadBundle()
+  const calls = []
+  dom.document.querySelector = (selector) => ({ click: () => calls.push(selector) })
+  const { ctx, registrations } = createCtx()
+  plugin.apply(ctx)
+
+  const tree = openPopover(registrations[0], react)
+  findButton(tree, '移动访问').props.onClick()
+  assert.equal(calls.length, 1)
+  assert.ok(calls[0].includes('dsh-mobile-control__trigger'))
+  assert.equal(
+    findButton(react.tree, '移动访问'),
+    undefined,
+    'the popover must close after a launch',
+  )
 })

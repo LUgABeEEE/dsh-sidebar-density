@@ -26,6 +26,7 @@ A sidebar density control centre for [DSH (DeepSeek Harness)](https://github.com
 | --- | --- | --- |
 | 侧栏底部「密度」按钮 | `sidebar.footer.action`，order -10（费用卡之前） | 点开弹出面板，全部控件都在里面 |
 | 设置 →「侧栏密度」 | `settings.section`（order 40，General 之后） | 同一套控件的正式页面 |
+| 面板底部「工具入口」 | 密度面板内 | 导入会话 / 移动访问（它们不再各占 footer 一行，见下） |
 
 折叠成 56px 图标栏时，底部入口缩成图标仍然可点（面板不在此时展开）。
 **默认全部关闭/标准**，状态按浏览器持久化（`localStorage`，v2；会自动迁移 v1 的两开关记录）。
@@ -41,6 +42,19 @@ A sidebar density control centre for [DSH (DeepSeek Harness)](https://github.com
 | **区标题** | 36px | 26px | 省 **10px** |
 
 全部打开约还给会话列表 **270px ≈ 7 行**。
+
+### 底部收纳的两个入口
+
+`dsh-chat-import` 的「导入会话」与 `dsh-mobile` 的「移动访问」原本各占 footer 一行。插件把这两枚按钮
+隐藏，并在密度面板底部提供同名入口：
+
+| 入口 | 怎么打开 |
+| --- | --- |
+| 导入会话 | 优先调原生右栏服务 `sidebarRight.openTab('chat-import')`（与它自己按钮同一条调用）；取不到服务时点回原按钮 |
+| 移动访问 | 点 `dsh-mobile-control__trigger`，由它自己打开移动访问面板 |
+
+两个原生按钮仍在 DOM 里、仍归各自插件所有：上游改名/换文案时隐藏规则**静默失效**（按钮回到 footer，
+面板入口自动消失），不会留下"点了没反应"的死按钮。
 
 ### 三档密度预设
 
@@ -124,3 +138,5 @@ npm run verify     # node --check + node --test
 6. 打开右栏 → 侧栏宽度预设不与你抢布局；右栏字号跟随预设。
 7. 设置页里出现「侧栏密度」分区，控件与弹出面板一致。
 8. 点「恢复默认」→ 界面回到出厂样子（记录仍留在 localStorage，刷新不丢）。
+9. 底部只剩「费用卡 + 密度」两行；「导入会话」「移动访问」不再各占一行。
+10. 面板里点「导入会话」→ 右栏导入 tab 打开；点「移动访问」→ 移动访问面板打开；面板随即收起。
