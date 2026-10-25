@@ -555,6 +555,14 @@ test('the sheet hides folded entries and the mobile trigger', () => {
   const style = dom.head.children.find((child) => child.id === 'dsh-sidebar-density-css')
   assert.ok(style.textContent.includes('[data-dsd-folded]'))
   assert.ok(style.textContent.includes('[class*="dsh-mobile-control__trigger"]'))
+  assert.ok(
+    style.textContent.includes('display:none!important'),
+    'the fold must beat the trigger inline display',
+  )
+  assert.ok(
+    style.textContent.includes(':not([class*="dsd-"])'),
+    'the aria-label fallback must not hide our own quick entry',
+  )
 })
 
 test('install marks the chat-import button as folded and leaves our own alone', () => {
