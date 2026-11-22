@@ -1,6 +1,6 @@
 # dsh-sidebar-density
 
-**A lightweight sidebar UI for [DSH (DeepSeek Harness)](https://github.com/LUgABeEEE/dsh-main-workspace).** Five fold switches, three density presets and three width presets — one footer row plus a settings section, with no dependencies and no background service. **v0.1.0**
+**A lightweight sidebar UI for [DSH (DeepSeek Harness)](https://github.com/LUgABeEEE/dsh-main-workspace).** Five fold switches, three density presets and three width presets — one footer row plus a settings section, with no dependencies and no background service. **v0.1.1**
 
 **轻量级侧栏 UI**：把 DSH 左侧栏被"外壳"吃掉的高度还给「工作区」，顺手给整套密度/宽度控制。没有依赖、没有常驻服务、没有构建步骤——一个 `lib/client.js` 加一张注入的样式表；装上是几行 CSS，卸载即完全还原。
 
@@ -30,7 +30,7 @@
 
 在 ~840px 的视口里，会话列表只剩 ≈200px ≈ **4.5 行**。装上越多面板型插件，列表越小。
 
-## 这个插件做什么（v0.1.0）
+## 这个插件做什么（v0.1.1）
 
 ### 入口（收纳，不占常驻高度）
 
@@ -54,6 +54,10 @@
 | **区标题** | 36px | 26px | 省 **10px** |
 
 全部打开约还给会话列表 **270px ≈ 7 行**。
+
+> **0.2.2 的置顶按钮**：DSH 0.2.2 给每个面板行加了「取消置顶」按钮。图标模式下它正好压在图标上，
+> 点图标会变成取消置顶。v0.1.1 起图标模式隐藏这枚按钮（改为 36px 图标单元），取消置顶走该行的
+> 「更多」菜单。
 
 ### 底部一行的三个入口
 
@@ -148,7 +152,7 @@ npm run verify     # node --check + node --test
 
 1. 侧栏底部出现「密度」按钮，点开有预设/宽度/五个开关。
 2. 点「紧凑」→ 字号、面板行、品牌行一起收紧；会话列表多出几行。
-3. 打开「导航」→ 面板导航变一行图标。
+3. 打开「导航」→ 面板导航变一行图标；**点任意图标能进对应面板**（不会变成取消置顶）。
 4. 点「窄」→ 侧栏变 264px；**拖一下分隔条** → 恢复自动宽度，设置里的宽度回到「自动」。
 5. 把侧栏收成图标栏 → 「密度」按钮变成可点图标。
 6. 打开右栏 → 侧栏宽度预设不与你抢布局；右栏字号跟随预设。
