@@ -329,6 +329,8 @@ test('the sheet is installed into head, keyed, and carries every hook', () => {
   for (const hook of [
     'nav[class*="panelList"]',
     '[class*="panelRow"]',
+    '[class*="panelEntry"]',
+    '[class*="panelUnpin"]',
     '[class*="panelTitle"]',
     '[class*="cm-footer-stack"]',
     '[data-slot="sidebar.footer.action"]',
@@ -379,6 +381,30 @@ test('the foot entry opens a popover with presets, widths and five switches', ()
     assert.ok(findButton(popover, label), `popover must offer the ${label} switch`)
   }
   assert.equal(findButton(popover, '侧栏密度').props['aria-expanded'], true)
+})
+
+test('the icon-mode nav does not let the 0.2.2 unpin button cover the panel', () => {
+  const { dom, plugin } = loadBundle()
+  const { ctx } = createCtx()
+  plugin.apply(ctx)
+
+  const css = dom.head.children.find((child) => child.id === 'dsh-sidebar-density-css').textContent
+  const ruleOf = (selector) => {
+    const start = css.indexOf(selector)
+    assert.ok(start >= 0, `sheet must address ${selector}`)
+    return css.slice(start, css.indexOf('}', start))
+  }
+
+  // DSH 0.2.2 wraps every panel row in panelEntry and adds an absolutely
+  // positioned unpin button; in a 36px icon cell it sits on top of the glyph.
+  assert.ok(
+    ruleOf('html[data-dsd-nav="icons"] nav[class*="panelList"] [class*="panelUnpin"]').includes('display:none'),
+    'the unpin button must be hidden in icon mode so clicking the icon selects the panel',
+  )
+  assert.ok(
+    ruleOf('html[data-dsd-nav="icons"] nav[class*="panelList"] [class*="panelEntry"]').includes('width:36px'),
+    'each panel entry must be the 36px icon cell',
+  )
 })
 
 test('toggling a switch flips <html>, the aria state and the v2 record', () => {
